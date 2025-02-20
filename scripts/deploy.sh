@@ -6,7 +6,7 @@ set -euo pipefail
 # Can be: local, sepolia, holesky, mainnet, base-sepolia, base, optimism
 TARGET_CHAIN=${1:-local}
 # Check that target chain is in allowed values
-if [ "$TARGET_CHAIN" != "local" ] && [ "$TARGET_CHAIN" != "sepolia" ] && [ "$TARGET_CHAIN" != "holesky" ] && [ "$TARGET_CHAIN" != "mainnet" ] && [ "$TARGET_CHAIN" != "base-sepolia" ] && [ "$TARGET_CHAIN" != "base" ] && [ "$TARGET_CHAIN" != "optimism" ]; then
+if [ "$TARGET_CHAIN" != "local" ] && [ "$TARGET_CHAIN" != "sepolia" ] && [ "$TARGET_CHAIN" != "holesky" ] && [ "$TARGET_CHAIN" != "mainnet" ] && [ "$TARGET_CHAIN" != "base-sepolia" ] && [ "$TARGET_CHAIN" != "base" ] && [ "$TARGET_CHAIN" != "optimism" ] && [ "$TARGET_CHAIN" != "quarkchain" ]; then
   echo "Invalid target chain: $TARGET_CHAIN"
   exit 1
 fi
@@ -61,6 +61,10 @@ elif [ "$TARGET_CHAIN" == "optimism" ]; then
   PRIVKEY=$PRIVATE_KEY_OPTIMISM
   RPC_URL=https://mainnet.optimism.io/
   CHAIN_ID=10
+elif [ "$TARGET_CHAIN" == "quarkchain" ]; then
+  PRIVKEY=$PRIVATE_KEY_QUARKCHAIN
+  RPC_URL=https://rpc.beta.testnet.l2.quarkchain.io:8545
+  CHAIN_ID=3335
 else
   echo "Not implemented yet"
   exit 1
@@ -99,6 +103,8 @@ elif [ "$TARGET_CHAIN" == "base" ]; then
 elif [ "$TARGET_CHAIN" == "optimism" ]; then
   # 0xAafA7E1FBE681de12D41Ef9a5d5206A96963390e
   FORGE_SCRIPT_OPTIONS="--broadcast --verify --slow"
+elif [ "$TARGET_CHAIN" == "quarkchain" ]; then
+  FORGE_SCRIPT_OPTIONS="--broadcast"
 else
   echo "Not implemented yet"
   exit 1
@@ -216,7 +222,7 @@ if [ "$SECTION" == "all" ]; then
         ./scripts/deploy.sh | tee >(cat - >&5))"
 
       # Extract the address of the deployed plugin
-      PLUGIN_ADDRESS=$(echo "$OUTPUT" | grep -oP 'Deployed to: \K0x\w+')
+      PLUGIN_ADDRESS=$(echo "$OUTPUT" | perl -nle 'print $& if /Deployed to: \K0x\w+/')
       echo "Plugin $PLUGIN_FOLDER address: $PLUGIN_ADDRESS"
 
       # Add the plugin to the OCWebsiteFactory library, and as a default plugin
@@ -242,9 +248,9 @@ if [ "$SECTION" == "all" ] || [ "$SECTION" == "example-ocwebsite" ]; then
     node . --rpc $RPC_URL --skip-tx-validation mint --factory-address $OCWEBSITE_FACTORY_ADDRESS $CHAIN_ID example | tee >(cat - >&5))"
 
   # Get the address of the OCWebsite
-  OCWEBSITE_ADDRESS=$(echo "$OUTPUT" | grep -oP 'New OCWebsite smart contract: \K0x\w+')
+  OCWEBSITE_ADDRESS=$(echo "$OUTPUT" | perl -nle 'print $& if /New OCWebsite smart contract: \K0x\w+/')
   # Get the OCWebsite token id
-  OCWEBSITE_TOKEN_ID=2 # $(echo "$OUTPUT" | grep -oP 'Token ID: \K\d+')
+  OCWEBSITE_TOKEN_ID=2 # $(echo "$OUTPUT" | perl -nle 'print $& if /Token ID: \K\d+/')
 
   # Fetch the address of the injectedVariables plugin
   INJECTED_VARIABLES_PLUGIN_ADDRESS=$(cat contracts/broadcast/OCWebsiteFactory.s.sol/${CHAIN_ID}/run-latest.json | jq -r '[.transactions[] | select(.contractName == "InjectedVariablesPlugin" and .transactionType == "CREATE")][0].contractAddress')

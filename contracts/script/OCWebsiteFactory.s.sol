@@ -50,7 +50,7 @@ import { IVersionableWebsite } from "../src/interfaces/IVersionableWebsite.sol";
 import { OCWebAdminPlugin } from "../src/OCWebsite/plugins/OCWebAdminPlugin.sol";
 
 contract OCWebsiteFactoryScript is Script {
-    enum TargetChain{ LOCAL, SEPOLIA, HOLESKY, MAINNET, BASE_SEPOLIA, BASE, OPTIMISM }
+    enum TargetChain{ LOCAL, SEPOLIA, HOLESKY, MAINNET, BASE_SEPOLIA, BASE, OPTIMISM, QUARKCHAIN }
 
     function setUp() public {}
 
@@ -73,6 +73,8 @@ contract OCWebsiteFactoryScript is Script {
                 targetChain = TargetChain.BASE;
             } else if(keccak256(abi.encodePacked(vm.envString("TARGET_CHAIN"))) == keccak256(abi.encodePacked("optimism"))) {
                 targetChain = TargetChain.OPTIMISM;
+            } else if(keccak256(abi.encodePacked(vm.envString("TARGET_CHAIN"))) == keccak256(abi.encodePacked("quarkchain"))) {
+                targetChain = TargetChain.QUARKCHAIN;
             }
             else {
                 console.log("Unknown target chain: ", targetChainString);
@@ -116,11 +118,11 @@ contract OCWebsiteFactoryScript is Script {
                 opts.unsafeAllow = "external-library-linking";
                 address factoryProxy = Upgrades.deployUUPSProxy(
                     "OCWebsiteFactory.sol:OCWebsiteFactory",
-                    abi.encodeCall(OCWebsiteFactory.initialize, (msg.sender, "eth", domain, getChainShortName(targetChain), factoryToken, websiteImplementation, websiteVersionViewerImplementation)), 
+                    abi.encodeCall(OCWebsiteFactory.initialize, (msg.sender, "eth", domain, getChainShortName(targetChain), factoryToken, websiteImplementation, websiteVersionViewerImplementation)),
                     opts
                 );
                 factory = OCWebsiteFactory(factoryProxy);
-                
+
                 // Deploying the blog factory (bypassing proxy, for testing)
                 // factory = new OCWebsiteFactory();
                 // factory.initialize(msg.sender, "eth", domain, getChainShortName(targetChain), factoryToken, websiteImplementation, websiteVersionViewerImplementation);
@@ -130,7 +132,7 @@ contract OCWebsiteFactoryScript is Script {
                 // Upgrades.upgradeProxy(
                 //     factoryProxy,
                 //     "OCWebsiteFactoryV2.sol",
-                //     abi.encodeCall(OCWebsiteFactoryV2.initializeV2, (42)), 
+                //     abi.encodeCall(OCWebsiteFactoryV2.initializeV2, (42)),
                 //     opts
                 // );
 
@@ -177,7 +179,7 @@ contract OCWebsiteFactoryScript is Script {
             }
             // if(targetChain != TargetChain.SEPOLIA && targetChain != TargetChain.LOCAL) {
             //     injectedVariablesPlugin.addVariable(factoryFrontend, 0, string.concat("factory-", "sep"), string.concat(LibStrings.toHexString(0x27D14546641278e8B097f3c7AbfC8e7609725f2F), ":", LibStrings.toString(11155111)));
-            // }            
+            // }
 
             // Set the website as the factory frontend
             factory.setFactoryWebsite(factoryFrontend);
@@ -250,31 +252,31 @@ contract OCWebsiteFactoryScript is Script {
     //     // Local chain : deploy ENS
     //     if(targetChain == TargetChain.LOCAL){
     //         ENSRegistry registry;
-            
+
     //         bytes32 topdomainNamehash = keccak256(abi.encodePacked(bytes32(0x0), keccak256(abi.encodePacked("eth"))));
 
     //         // ENS registry
     //         registry = new ENSRegistry();
     //         console.log("ENS registry: ", vm.toString(address(registry)));
     //         console.log("ENS registry owner: ", vm.toString(registry.owner(0x0)));
-        
+
     //         // Root
     //         Root root = new Root(registry);
     //         console.log("Root: ", vm.toString(address(root)));
     //         registry.setOwner(0x0, address(root));
     //         root.setController(msg.sender, true);
-            
+
     //         // ENS reverse registrar
     //         ReverseRegistrar reverseRegistrar = new ReverseRegistrar(registry);
     //         console.log("Reverse registrar: ", vm.toString(address(reverseRegistrar)));
     //         root.setSubnodeOwner(keccak256(abi.encodePacked("reverse")), msg.sender);
     //         registry.setSubnodeOwner(keccak256(abi.encodePacked(bytes32(0x0), keccak256(abi.encodePacked("reverse")))), keccak256(abi.encodePacked("addr")), address(reverseRegistrar));
-            
+
     //         // Base registrar implementation
     //         registrar = new BaseRegistrarImplementation(registry, topdomainNamehash);
     //         root.setSubnodeOwner(keccak256(abi.encodePacked("eth")), address(registrar));
     //         console.log("Base registrar: ", vm.toString(address(registrar)));
-            
+
     //         ExponentialPremiumPriceOracle priceOracle;
     //         {
     //             // Dummy price oracle
@@ -379,13 +381,13 @@ contract OCWebsiteFactoryScript is Script {
         if(targetChain == TargetChain.LOCAL) {
             ethStorageContract = new TestEthStorageContractKZG();
             StorageContract.Config memory ethStorageConfig = StorageContract.Config({
-                maxKvSizeBits: 17, // maxKvSizeBits, 131072
-                shardSizeBits: 39, // shardSizeBits ~ 512G
-                randomChecks: 2, // randomChecks
-                minimumDiff: 4718592000, // minimumDiff 5 * 3 * 3600 * 1024 * 1024 / 12 = 4718592000 for 5 replicas that can have 1M IOs in one epoch
-                cutoff: 7200, // cutoff = 2/3 * target internal (3 hours), 3 * 3600 * 2/3
-                diffAdjDivisor: 32, // diffAdjDivisor
-                treasuryShare: 100 // treasuryShare, means 1%
+            maxKvSizeBits: 17, // maxKvSizeBits, 131072
+            shardSizeBits: 39, // shardSizeBits ~ 512G
+            randomChecks: 2, // randomChecks
+            minimumDiff: 4718592000, // minimumDiff 5 * 3 * 3600 * 1024 * 1024 / 12 = 4718592000 for 5 replicas that can have 1M IOs in one epoch
+            cutoff: 7200, // cutoff = 2/3 * target internal (3 hours), 3 * 3600 * 2/3
+            diffAdjDivisor: 32, // diffAdjDivisor
+            treasuryShare: 100 // treasuryShare, means 1%
             });
             ethStorageContract.initialize(
                 ethStorageConfig,
@@ -396,7 +398,7 @@ contract OCWebsiteFactoryScript is Script {
                 msg.sender, // treasury
                 3145728000000000000000, // prepaidAmount - 50% * 2^39 / 131072 * 1500000Gwei, it also means 3145 ETH for half of the shard
                 msg.sender // owner
-                );
+            );
             // Send some eth into the storage contract to give reward for empty mining
             ethStorageContract.sendValue{value: 0.01 ether}();
         }
@@ -426,6 +428,8 @@ contract OCWebsiteFactoryScript is Script {
             return "base";
         } else if(targetChain == TargetChain.OPTIMISM) {
             return "oeth";
+        } else if(targetChain == TargetChain.QUARKCHAIN) {
+            return "quarkchain";
         }
     }
 }
