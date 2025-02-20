@@ -42,7 +42,6 @@ if(isViewedAsWebsiteAdmin.value) {
       <div class="menu">
         <RouterLink to="/mint"><span class="menu-icon"><MagicIcon /></span><span class="menu-text">Mint</span></RouterLink>
         <RouterLink to="/my-ocwebsites"><span class="menu-icon"><LayourTextWindowReverseIcon /></span><span class="menu-text">My OCWebsites</span></RouterLink>
-        <RouterLink to="/featured"><span class="menu-icon"><StarIcon /></span><span class="menu-text">Featured</span></RouterLink>
         <RouterLink to="/browse"><span class="menu-icon"><TableIcon /></span><span class="menu-text">Browse</span></RouterLink>
       </div>
 
